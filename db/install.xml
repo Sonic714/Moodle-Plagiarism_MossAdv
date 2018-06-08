@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="plagiarism/moss/db" VERSION="20111020" COMMENT="XMLDB file for Moodle plagiarism/moss plugin"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="plagiarism_moss" COMMENT="MOSS instances" NEXT="plagiarism_moss_configs">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cmid"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="timetomeasure"/>
+        <FIELD NAME="timetomeasure" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cmid" NEXT="timemeasured"/>
+        <FIELD NAME="timemeasured" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timetomeasure" NEXT="tag"/>
+        <FIELD NAME="tag" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="timemeasured" NEXT="sensitivity"/>
+        <FIELD NAME="sensitivity" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="tag" NEXT="enabled"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="sensitivity" NEXT="coursename"/>
+        <FIELD NAME="coursename" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Cache course name" PREVIOUS="enabled" NEXT="modulename"/>
+        <FIELD NAME="modulename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Cache activity module name" PREVIOUS="coursename"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="cmid"/>
+        <KEY NAME="cmid" TYPE="foreign-unique" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id" PREVIOUS="primary" NEXT="tag"/>
+        <KEY NAME="tag" TYPE="foreign" FIELDS="tag" REFTABLE="plagiarism_moss_tags" REFFIELDS="id" PREVIOUS="cmid"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="plagiarism_moss_configs" COMMENT="configs for different filename patterns" PREVIOUS="plagiarism_moss" NEXT="plagiarism_moss_tags">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="moss"/>
+        <FIELD NAME="moss" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="filepatterns"/>
+        <FIELD NAME="filepatterns" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" PREVIOUS="moss" NEXT="language"/>
+        <FIELD NAME="language" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" PREVIOUS="filepatterns"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="moss"/>
+        <KEY NAME="moss" TYPE="foreign" FIELDS="moss" REFTABLE="plagiarism_moss" REFFIELDS="id" PREVIOUS="primary"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="plagiarism_moss_tags" COMMENT="tags to identify assignments with same task" PREVIOUS="plagiarism_moss_configs" NEXT="plagiarism_moss_results">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="name"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="id"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="name"/>
+        <KEY NAME="name" TYPE="unique" FIELDS="name" PREVIOUS="primary"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="plagiarism_moss_results" COMMENT="place to store moss result" PREVIOUS="plagiarism_moss_tags" NEXT="plagiarism_moss_matchedfiles">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="moss"/>
+        <FIELD NAME="moss" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="config"/>
+        <FIELD NAME="config" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="moss" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="config" NEXT="pair"/>
+        <FIELD NAME="pair" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="userid" NEXT="rank"/>
+        <FIELD NAME="rank" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="pair" NEXT="percentage"/>
+        <FIELD NAME="percentage" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="rank" NEXT="linesmatched"/>
+        <FIELD NAME="linesmatched" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="percentage" NEXT="link"/>
+        <FIELD NAME="link" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="linesmatched" NEXT="confirmed"/>
+        <FIELD NAME="confirmed" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="link" NEXT="confirmer"/>
+        <FIELD NAME="confirmer" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="confirmed" NEXT="timeconfirmed"/>
+        <FIELD NAME="timeconfirmed" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="confirmer"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="moss"/>
+        <KEY NAME="moss" TYPE="foreign" FIELDS="moss" REFTABLE="plagiarism_moss" REFFIELDS="id" PREVIOUS="primary" NEXT="config"/>
+        <KEY NAME="config" TYPE="foreign" FIELDS="config" REFTABLE="plagiarism_moss_configs" REFFIELDS="id" PREVIOUS="moss" NEXT="userid"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="config" NEXT="confirmer"/>
+        <KEY NAME="confirmer" TYPE="foreign" FIELDS="confirmer" REFTABLE="user" REFFIELDS="id" PREVIOUS="userid" NEXT="pair"/>
+        <KEY NAME="pair" TYPE="unique" FIELDS="pair" PREVIOUS="confirmer"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="rank" UNIQUE="false" FIELDS="rank"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="plagiarism_moss_matchedfiles" COMMENT="Files matched" PREVIOUS="plagiarism_moss_results">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="result"/>
+        <FIELD NAME="result" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="contenthash"/>
+        <FIELD NAME="contenthash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" PREVIOUS="result"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="result"/>
+        <KEY NAME="result" TYPE="foreign" FIELDS="result" REFTABLE="plagiarism_moss_results" REFFIELDS="id" PREVIOUS="primary"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="contenthash" UNIQUE="false" FIELDS="contenthash"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
